@@ -1,0 +1,79 @@
+# -*- coding: utf-8 -*-
+'''
+Support for Bareos backup system.
+
+:depends: Bareos python api
+    You can install it using package manager:
+
+    .. code-block:: bash
+
+        salt-call pkg.install python-bareos
+
+:configuration: The following configuration defaults can be
+    define (pillar or config files):
+
+    .. code-block:: yaml
+
+        bareos.config:
+            address: localhost
+            dirname: None
+            user: <user agent>
+            password: apassword
+            port: 9101
+            api_kg: None
+
+    Usage can override the config defaults:
+
+    .. code-block:: bash
+
+            salt-call ipmi.get_user api_host=myipmienabled.system
+                                    api_user=admin api_pass=pass
+                                    uid=1
+
+
+'''
+# Import Python Libs
+from __future__ import absolute_import, print_function, unicode_literals
+import logging
+
+# Import Salt libs
+from salt.ext import six
+
+log = logging.getLogger(__name__)
+
+
+try:
+    import bareos.bsock
+    HAS_BAREOS = True
+except ImportError:
+    HAS_BAREOS = False
+
+__virtualname__ = 'bareos'
+
+
+def __virtual__():
+    if HAS_BAREOS:
+        return __virtualname__
+    else:
+        return False, 'Bareos module cannot be loaded: bareos api not available'
+
+
+def _get_config(**kwargs):
+    '''
+    Return configuration
+    '''
+    config = {
+        'address': 'localhost',
+        'dirname': None,
+        'port': 9101,
+        'user': '*UserAgent*',
+        'password': '',
+    }
+    if '__salt__' in globals():
+        config_key = '{0}.config'.format(__virtualname__)
+        config.update(__salt__['config.get'](config_key, {}))
+    for k in set(config) & set(kwargs):
+        config[k] = kwargs[k]
+    return config
+
+
