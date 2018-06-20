@@ -94,4 +94,4 @@ class _BareosConsole(object):
 def cmd(command, **kwargs):
     with _BareosConsole(**kwargs) as c:
         response = c.call(command)
-    return json.loads(response)
+    return response
