@@ -35,6 +35,7 @@ Support for Bareos backup system.
 # Import Python Libs
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
+import json
 
 # Import Salt libs
 from salt.ext import six
@@ -77,3 +78,20 @@ def _get_config(**kwargs):
     return config
 
 
+class _BareosConsole(object):
+
+    def __init__(self, **kwargs):
+        config = _get_config(**kwargs)
+        self.console = bareos.bsock.DirectorConsoleJson(address=config['address'], port=config['port'], name=config['user'],
+                                              password=bareos.bsock.Password(config['password']))
+
+    def __enter__(self):
+        return self.console
+
+    def __exit__(self, *args):
+        del self.console
+
+def cmd(command, **kwargs):
+    with _BareosConsole(**kwargs) as c:
+        response = c.call(command)
+    return json.loads(response)
