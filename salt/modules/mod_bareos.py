@@ -82,6 +82,20 @@ class _BareosConsole(object):
 
     def __init__(self, **kwargs):
         config = _get_config(**kwargs)
+        self.console = bareos.bsock.DirectorConsole(address=config['address'], port=config['port'], name=config['user'],
+                                              password=bareos.bsock.Password(config['password']))
+
+    def __enter__(self):
+        return self.console
+
+    def __exit__(self, *args):
+        del self.console
+
+
+class _BareosConsoleJson(object):
+
+    def __init__(self, **kwargs):
+        config = _get_config(**kwargs)
         self.console = bareos.bsock.DirectorConsoleJson(address=config['address'], port=config['port'], name=config['user'],
                                               password=bareos.bsock.Password(config['password']))
 
@@ -91,7 +105,14 @@ class _BareosConsole(object):
     def __exit__(self, *args):
         del self.console
 
+
 def cmd(command, **kwargs):
     with _BareosConsole(**kwargs) as c:
         response = c.call(command)
-    return response
+    return response.decode('utf-8')
+
+
+def client_list(**kwargs):
+    with _BareosConsoleJson(**kwargs) as c:
+        res = c.call('list clients')
+    return res
