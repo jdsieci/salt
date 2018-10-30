@@ -36,6 +36,7 @@ Support for Bareos backup system.
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import json
+import re
 
 # Import Salt libs
 from salt.ext import six
@@ -106,7 +107,35 @@ class _BareosConsoleJson(object):
         del self.console
 
 
+def _parse_bareos_config(sconf):
+    output = []
+    in_section = False
+    section = {}
+    section_start = re.compile('^\s*(\w)\s*\{')
+    for line in sconf.splitlines(sconf):
+        if not line: continue
+        if section_start.match(line):
+            in_section = True
+        elif re.match('^\s*}', line):
+            output.push(section)
+            in_section = False
+            section = {}
+        elif in_section:
+            name, value = line.split('=')
+            if not value and section_start.match():
+            section[name] = value
+    return output
+
 def cmd(command, **kwargs):
+    '''
+    Run bareos console command and returns raw output
+    :param command: command string
+    :return: raw command output
+
+    .. code-block:: bash
+
+        salt '*' bareos.cmd 'list clients'
+    '''
     with _BareosConsole(**kwargs) as c:
         response = c.call(command)
     return response.decode('utf-8')
