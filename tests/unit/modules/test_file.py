@@ -1554,17 +1554,8 @@ class FilemodLineTests(TestCase, LoaderModuleMockMixin):
                 patch('salt.utils.atomicfile.atomic_open',
                       mock_open()) as atomic_open_mock:
             filemod.line(name, content=cfg_content, before='exit 0', mode='ensure')
-            handles = atomic_open_mock.filehandles[name]
-            # We should only have opened the file once
-            open_count = len(handles)
-            assert open_count == 1, open_count
-            # We should only have invoked .writelines() once...
-            writelines_content = handles[0].writelines_calls
-            writelines_count = len(writelines_content)
-            assert writelines_count == 1, writelines_count
-            # ... with the updated content
-            expected = self._get_body(file_modified)
-            assert writelines_content[0] == expected, (writelines_content[0], expected)
+            # If file not modified no handlers in dict
+            assert atomic_open_mock.filehandles.get(name) is None
 
     @with_tempfile()
     def test_line_insert_ensure_before_first_line(self, name):
@@ -1666,17 +1657,8 @@ class FilemodLineTests(TestCase, LoaderModuleMockMixin):
                 patch('salt.utils.atomicfile.atomic_open',
                       mock_open()) as atomic_open_mock:
             filemod.line(name, content=cfg_content, after='/etc/init.d/someservice restart', mode='ensure')
-            handles = atomic_open_mock.filehandles[name]
-            # We should only have opened the file once
-            open_count = len(handles)
-            assert open_count == 1, open_count
-            # We should only have invoked .writelines() once...
-            writelines_content = handles[0].writelines_calls
-            writelines_count = len(writelines_content)
-            assert writelines_count == 1, writelines_count
-            # ... with the updated content
-            expected = self._get_body(file_modified)
-            assert writelines_content[0] == expected, (writelines_content[0], expected)
+            # If file not modified no handlers in dict
+            assert atomic_open_mock.filehandles.get(name) is None
 
     @with_tempfile()
     def test_line_insert_ensure_beforeafter_twolines(self, name):
