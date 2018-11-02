@@ -1691,9 +1691,12 @@ def _starts_till(src, probe, strip_comments=True):
 
     no_match = -1
     equal = 0
+
     if not src or not probe:
         return no_match
 
+    src = src.rstrip('\n\r')
+    probe = probe.rstrip('\n\r')
     if src == probe:
         return equal
 
